@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}ATS Resume Matcher | JobVault AI{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold mb-1">Smart ATS Resume vs. Job Description Matcher</h2>
+    <p class="text-secondary mb-0">Paste your resume text and target job description to uncover missing technical keywords</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="glass-panel">
+            <form action="/matcher" method="POST">
+                <div class="mb-3">
+                    <label class="form-label small text-secondary">Target Job Role *</label>
+                    <input type="text" name="target_role" class="form-control input-dark" placeholder="e.g., Python FastAPI Backend Developer" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small text-secondary">Your Resume Summary & Skills Text *</label>
+                    <textarea name="resume_text" rows="5" class="form-control textarea-dark" placeholder="Paste your resume skills, projects, Python, Flask, FastAPI, SQLAlchemy, SQLite, REST APIs..." required>{{ resume_text or '' }}</textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small text-secondary">Company Job Description (JD) *</label>
+                    <textarea name="jd_text" rows="5" class="form-control textarea-dark" placeholder="Paste the job requirements from LinkedIn or Naukri here..." required>{{ jd_text or '' }}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-violet w-100 py-2">
+                    <i class="bi bi-cpu-fill me-1"></i>Run ATS Keyword Analysis
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        {% if result %}
+        <div class="glass-panel mb-4 border-primary">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <small class="text-uppercase text-info fw-bold">ATS Compatibility Score</small>
+                    <h5 class="fw-bold mb-0">{{ result.target_role }}</h5>
+                </div>
+                <div class="display-6 fw-bold {% if result.score >= 75 %}text-success{% elif result.score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                    {{ result.score }}%
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <small class="text-success fw-bold d-block mb-2"><i class="bi bi-check-circle-fill me-1"></i>Matched Keywords ({{ result.matched|length }})</small>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for kw in result.matched %}
+                        <span class="kw-pill-match">{{ kw }}</span>
+                    {% else %}
+                        <small class="text-secondary">No matching keywords found.</small>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div>
+                <small class="text-danger fw-bold d-block mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>Missing High-Impact Keywords ({{ result.missing|length }})</small>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for kw in result.missing %}
+                        <span class="kw-pill-miss">+ {{ kw }}</span>
+                    {% else %}
+                        <small class="text-success">Awesome! All top JD keywords are covered.</small>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="glass-panel">
+            <h6 class="fw-bold mb-3">Scan History</h6>
+            <div class="d-grid gap-2">
+                {% for s in scans %}
+                <div class="p-3 rounded-3 bg-dark border border-secondary border-opacity-25">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold small">{{ s.target_role }}</span>
+                        <span class="badge bg-info text-dark">{{ s.match_score }}%</span>
+                    </div>
+                    <small class="text-secondary d-block mt-1">Missing: {{ s.missing_keywords or 'None' }}</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Job Pipeline Tracker | JobVault AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Job Application Pipeline</h2>
+        <p class="text-secondary mb-0">Add target roles, update interview stages in real time & track CTC offers</p>
+    </div>
+    <a href="/export/csv" class="btn btn-cyan">
+        <i class="bi bi-download me-1"></i>Download CSV Report
+    </a>
+</div>
+
+<div class="glass-panel mb-4">
+    <h5 class="fw-bold mb-3"><i class="bi bi-plus-circle-fill text-info me-2"></i>Log New Job Application</h5>
+    <form action="/applications/add" method="POST">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small text-secondary">Company Name *</label>
+                <input type="text" name="company" class="form-control input-dark" placeholder="e.g., Razorpay / Google" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-secondary">Job Role *</label>
+                <input type="text" name="role" class="form-control input-dark" placeholder="e.g., Python Full Stack Dev" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-secondary">Location</label>
+                <input type="text" name="location" class="form-control input-dark" value="Remote / Bengaluru">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-secondary">CTC Package</label>
+                <input type="text" name="ctc_package" class="form-control input-dark" placeholder="10 - 14 LPA">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-secondary">ATS Match (%)</label>
+                <input type="number" name="ats_score" min="0" max="100" value="85" class="form-control input-dark">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-secondary">Current Stage</label>
+                <select name="status" class="form-select select-dark">
+                    {% for st in status_options %}
+                        <option value="{{ st }}">{{ st }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-secondary">Portal</label>
+                <select name="job_portal" class="form-select select-dark">
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Naukri">Naukri</option>
+                    <option value="Wellfound">Wellfound</option>
+                    <option value="Career Portal">Career Portal</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-secondary">Applied Date</label>
+                <input type="date" name="applied_date" value="{{ today }}" class="form-control input-dark">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small text-secondary">HR Contact / Interview Notes</label>
+                <input type="text" name="notes" class="form-control input-dark" placeholder="Recruiter email or round notes...">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-violet w-100">Add to Pipeline</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="glass-panel mb-4">
+    <form method="GET" action="/applications" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <input type="text" name="q" value="{{ search_q }}" class="form-control input-dark" placeholder="Search company or role...">
+        </div>
+        <div class="col-md-4">
+            <select name="status" class="form-select select-dark">
+                <option value="">All Pipeline Stages</option>
+                {% for st in status_options %}
+                    <option value="{{ st }}" {% if filter_status == st %}selected{% endif %}>{{ st }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-outline-info w-100">Filter Pipeline</button>
+            {% if search_q or filter_status %}
+                <a href="/applications" class="btn btn-outline-danger">Reset</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<div class="glass-panel">
+    <div class="table-responsive">
+        <table class="table table-vault">
+            <thead>
+                <tr>
+                    <th>Company & Portal</th>
+                    <th>Role & Location</th>
+                    <th>CTC</th>
+                    <th>ATS Score</th>
+                    <th>Update Stage</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td>
+                        <div class="fw-bold">{{ job.company }}</div>
+                        <small class="text-secondary">{{ job.job_portal }} • {{ job.applied_date.strftime('%d %b %Y') }}</small>
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ job.role }}</div>
+                        <small class="text-secondary">{{ job.location }}</small>
+                        {% if job.notes %}<div class="text-info small mt-1">{{ job.notes }}</div>{% endif %}
+                    </td>
+                    <td class="fw-semibold text-info">{{ job.ctc_package }}</td>
+                    <td>
+                        <span class="badge {% if job.ats_score >= 85 %}bg-success{% elif job.ats_score >= 70 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                            {{ job.ats_score }}%
+                        </span>
+                    </td>
+                    <td>
+                        <form action="/applications/{{ job.id }}/status" method="POST" class="d-flex gap-1">
+                            <select name="status" class="form-select form-select-sm select-dark" style="min-width: 155px;" onchange="this.form.submit()">
+                                {% for st in status_options %}
+                                    <option value="{{ st }}" {% if job.status == st %}selected{% endif %}>{{ st }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                    <td class="text-end">
+                        <form action="/applications/{{ job.id }}/delete" method="POST" onsubmit="return confirm('Remove this job entry?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-3"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-secondary">No applications found for this filter.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

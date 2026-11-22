@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}JobVault AI | Career Pipeline & ATS Resume Suite{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="layout-grid">
+    <aside class="nav-sidebar">
+        <a href="/" class="brand-logo">
+            <div class="logo-badge"><i class="bi bi-cpu-fill"></i></div>
+            <div>JobVault<span>AI</span></div>
+        </a>
+
+        <nav class="flex-grow-1">
+            <small class="text-uppercase text-secondary fw-bold px-3 d-block mb-2" style="font-size: 0.7rem; letter-spacing: 1px;">Career Command</small>
+
+            <a href="/" class="side-link {% if active_page == 'dashboard' %}active{% endif %}">
+                <i class="bi bi-speedometer2"></i> Executive Dashboard
+            </a>
+            <a href="/applications" class="side-link {% if active_page == 'applications' %}active{% endif %}">
+                <i class="bi bi-kanban-fill"></i> Job Pipeline Tracker
+            </a>
+            <a href="/matcher" class="side-link {% if active_page == 'matcher' %}active{% endif %}">
+                <i class="bi bi-file-earmark-check-fill"></i> ATS Resume Matcher
+            </a>
+
+            <small class="text-uppercase text-secondary fw-bold px-3 d-block mt-4 mb-2" style="font-size: 0.7rem; letter-spacing: 1px;">FastAPI & Exports</small>
+
+            <a href="/docs" target="_blank" class="side-link">
+                <i class="bi bi-lightning-charge-fill text-warning"></i> Swagger API Docs (/docs)
+            </a>
+            <a href="/api/jobs" target="_blank" class="side-link">
+                <i class="bi bi-braces"></i> REST JSON Endpoint
+            </a>
+            <a href="/export/csv" class="side-link">
+                <i class="bi bi-filetype-csv text-info"></i> Export CSV Report
+            </a>
+        </nav>
+
+        <div class="p-3 rounded-4 border border-secondary border-opacity-25 bg-dark bg-opacity-50 mt-3">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-success rounded-circle p-1"> </span>
+                <small class="fw-bold text-light">FastAPI Engine Online</small>
+            </div>
+            <small class="text-secondary d-block" style="font-size: 0.75rem;">SQLite + SQLAlchemy + OpenAPI 3.1</small>
+        </div>
+    </aside>
+
+    <main class="content-stage">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

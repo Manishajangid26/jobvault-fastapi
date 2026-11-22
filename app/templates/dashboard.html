@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Executive Dashboard | JobVault AI{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Career Pipeline Command Center</h2>
+        <p class="text-secondary mb-0">Track interview conversion rates, active offers, and ATS resume readiness</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/matcher" class="btn btn-violet">
+            <i class="bi bi-stars me-1"></i>Scan Resume vs JD
+        </a>
+        <a href="/docs" target="_blank" class="btn btn-outline-info rounded-3">
+            <i class="bi bi-terminal me-1"></i>Open Swagger API
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="glass-panel h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="text-secondary small fw-semibold">Total Applications</span>
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-briefcase-fill"></i></div>
+            </div>
+            <h2 class="fw-bold mb-1">{{ total_apps }}</h2>
+            <small class="text-info">Across product & tech firms</small>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="glass-panel h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="text-secondary small fw-semibold">Interview Conversion</span>
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-graph-up-arrow"></i></div>
+            </div>
+            <h2 class="fw-bold mb-1">{{ interview_rate }}%</h2>
+            <small class="text-warning">{{ interviews }} active interview stages</small>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="glass-panel h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="text-secondary small fw-semibold">Offers Secured</span>
+                <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-award-fill"></i></div>
+            </div>
+            <h2 class="fw-bold mb-1">{{ offers }}</h2>
+            <small class="text-success">Verified offer letter(s)</small>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="glass-panel h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="text-secondary small fw-semibold">Average ATS Score</span>
+                <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-cpu"></i></div>
+            </div>
+            <h2 class="fw-bold mb-1">{{ avg_ats }}%</h2>
+            <small class="text-secondary">Resume keyword alignment</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="glass-panel h-100">
+            <h5 class="fw-bold mb-1">Hiring Funnel Analytics</h5>
+            <p class="text-secondary small mb-3">Distribution of applications across interview stages</p>
+            <div style="height: 265px; position: relative;">
+                <canvas id="pipelineBarChart"
+                        data-labels='{{ chart_labels | tojson }}'
+                        data-values='{{ chart_values | tojson }}'></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="glass-panel h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0">Recent ATS Scans</h5>
+                    <small class="text-secondary">Latest Resume vs JD benchmarks</small>
+                </div>
+                <a href="/matcher" class="btn btn-sm btn-outline-light rounded-pill px-3">New Scan</a>
+            </div>
+
+            <div class="d-grid gap-3">
+                {% for scan in recent_scans %}
+                <div class="p-3 rounded-4 bg-dark bg-opacity-75 border border-secondary border-opacity-25">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong class="small text-light">{{ scan.target_role }}</strong>
+                        <span class="badge {% if scan.match_score >= 75 %}bg-success{% elif scan.match_score >= 50 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                            {{ scan.match_score }}% Match
+                        </span>
+                    </div>
+                    <small class="text-secondary d-block text-truncate">
+                        Matched: {{ scan.matched_keywords }}
+                    </small>
+                </div>
+                {% else %}
+                <p class="text-secondary small">No ATS scans run yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="glass-panel">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h5 class="fw-bold mb-0">Active Company Pipeline</h5>
+            <small class="text-secondary">Most recent job submissions</small>
+        </div>
+        <a href="/applications" class="btn btn-sm btn-outline-info rounded-pill px-3">Manage All Jobs</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vault">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Role</th>
+                    <th>Package</th>
+                    <th>ATS Score</th>
+                    <th>Stage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in recent_jobs %}
+                <tr>
+                    <td class="fw-bold">{{ job.company }}</td>
+                    <td>{{ job.role }}</td>
+                    <td class="text-info fw-semibold">{{ job.ctc_package }}</td>
+                    <td><span class="badge bg-dark border border-secondary">{{ job.ats_score }}%</span></td>
+                    <td>
+                        <span class="badge {% if job.status == 'Offer' %}bg-success{% elif job.status == 'Rejected' %}bg-danger{% elif 'Interview' in job.status or 'Final' in job.status %}bg-warning text-dark{% else %}bg-primary{% endif %}">
+                            {{ job.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const canvas = document.getElementById('pipelineBarChart');
+    if (canvas) {
+        const labels = JSON.parse(canvas.dataset.labels || '[]');
+        const values = JSON.parse(canvas.dataset.values || '[]');
+
+        new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Applications',
+                    data: values,
+                    backgroundColor: ['#6366f1', '#06b6d4', '#f59e0b', '#a855f7', '#10b981', '#f43f5e'],
+                    borderRadius: 10,
+                    barThickness: 34
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                    y: { beginAtZero: true, ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.06)' } }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
